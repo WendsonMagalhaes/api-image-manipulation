@@ -15,14 +15,13 @@ app = FastAPI()
 
 IMGBB_API_KEY = os.getenv("IMGBB_API_KEY")
 
-session = new_session("u2netp")
-#session = new_session("isnet-general-use")
-
+# 🔹 Use apenas a sessão compatível com rembg e ONNX
+session = new_session("u2netp")  # mais estável no Render/CPU
 
 if not IMGBB_API_KEY:
     raise ValueError("IMGBB_API_KEY não configurada")
 
-# Permitir acesso do frontend
+# 🔹 Permitir acesso do frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,13 +31,19 @@ app.add_middleware(
 )
 
 # =========================================
+# 🔹 ROTA TESTE (opcional)
+# =========================================
+@app.get("/")
+def root():
+    return {"status": "API online 🚀"}
+
+# =========================================
 # 🔹 ROTA 1 — REMOVER FUNDO
 # =========================================
 @app.post("/remove-background")
 async def remove_background(file: UploadFile = File(...)):
     try:
         contents = await file.read()
-
         input_image = Image.open(io.BytesIO(contents)).convert("RGBA")
 
         # Remoção com sessão otimizada
@@ -51,7 +56,7 @@ async def remove_background(file: UploadFile = File(...)):
             alpha_matting_erode_size=10
         )
 
-        # 🔹 Pós-processamento leve para suavizar bordas
+        # Pós-processamento leve para suavizar bordas
         output_image = output_image.convert("RGBA")
 
         buffer = io.BytesIO()
@@ -69,29 +74,6 @@ async def remove_background(file: UploadFile = File(...)):
     except Exception as e:
         return {"error": str(e)}
 
-    try:
-        contents = await file.read()
-
-        input_image = Image.open(io.BytesIO(contents)).convert("RGBA")
-
-        output_image = remove(input_image)
-
-        buffer = io.BytesIO()
-        output_image.save(buffer, format="PNG", optimize=True)
-        buffer.seek(0)
-
-        return StreamingResponse(
-            buffer,
-            media_type="image/png",
-            headers={
-                "Content-Disposition": "attachment; filename=removed.png"
-            }
-        )
-
-    except Exception as e:
-        return {"error": str(e)}
-
-
 # =========================================
 # 🔹 ROTA 2 — UPLOAD PARA IMGBB
 # =========================================
@@ -99,8 +81,7 @@ async def remove_background(file: UploadFile = File(...)):
 async def upload_imgbb(file: UploadFile = File(...)):
     try:
         contents = await file.read()
-
-        img_base64 = base64.b64encode(contents)
+        img_base64 = base64.b64encode(contents).decode("utf-8")  # importante decodificar
 
         response = requests.post(
             "https://api.imgbb.com/1/upload",
