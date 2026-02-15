@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from rembg import remove
+from rembg import remove, new_session
 from PIL import Image
 import requests
 import io
@@ -14,6 +14,8 @@ load_dotenv()
 app = FastAPI()
 
 IMGBB_API_KEY = os.getenv("IMGBB_API_KEY")
+
+session = new_session("isnet-general-use")
 
 if not IMGBB_API_KEY:
     raise ValueError("IMGBB_API_KEY não configurada")
@@ -32,6 +34,39 @@ app.add_middleware(
 # =========================================
 @app.post("/remove-background")
 async def remove_background(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+
+        input_image = Image.open(io.BytesIO(contents)).convert("RGBA")
+
+        # Remoção com sessão otimizada
+        output_image = remove(
+            input_image,
+            session=session,
+            alpha_matting=True,
+            alpha_matting_foreground_threshold=240,
+            alpha_matting_background_threshold=10,
+            alpha_matting_erode_size=10
+        )
+
+        # 🔹 Pós-processamento leve para suavizar bordas
+        output_image = output_image.convert("RGBA")
+
+        buffer = io.BytesIO()
+        output_image.save(buffer, format="PNG", optimize=True)
+        buffer.seek(0)
+
+        return StreamingResponse(
+            buffer,
+            media_type="image/png",
+            headers={
+                "Content-Disposition": "attachment; filename=removed.png"
+            }
+        )
+
+    except Exception as e:
+        return {"error": str(e)}
+
     try:
         contents = await file.read()
 
