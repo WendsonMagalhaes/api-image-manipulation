@@ -19,8 +19,8 @@ COPY app ./app
 # Instala dependências Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expondo porta 7860 (padrão Hugging Face Spaces)
-EXPOSE 7860
+# Porta será definida dinamicamente pelo Fly.io
+EXPOSE 8080
 
-# Comando para iniciar FastAPI
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
+# Comando para iniciar FastAPI com a porta do ambiente
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]

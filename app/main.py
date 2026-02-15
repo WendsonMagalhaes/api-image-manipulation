@@ -14,7 +14,6 @@ load_dotenv()
 app = FastAPI()
 
 IMGBB_API_KEY = os.getenv("IMGBB_API_KEY")
-
 if not IMGBB_API_KEY:
     raise ValueError("IMGBB_API_KEY não configurada")
 
@@ -27,11 +26,9 @@ app.add_middleware(
 )
 
 # =========================================
-# 🔹 Criar sessão de modelo uma única vez
+# 🔹 Inicializa modelo uma vez só
 # =========================================
-# "isnet-general-use" é leve e com boa qualidade
 session = new_session("isnet-general-use")
-
 
 # =========================================
 # 🔹 ROTA 1 — REMOVER FUNDO
@@ -40,10 +37,8 @@ session = new_session("isnet-general-use")
 async def remove_background(file: UploadFile = File(...)):
     try:
         contents = await file.read()
-
         input_image = Image.open(io.BytesIO(contents)).convert("RGBA")
 
-        # Remoção com sessão otimizada
         output_image = remove(
             input_image,
             session=session,
@@ -53,9 +48,6 @@ async def remove_background(file: UploadFile = File(...)):
             alpha_matting_erode_size=10
         )
 
-        # 🔹 Pós-processamento leve para suavizar bordas
-        output_image = output_image.convert("RGBA")
-
         buffer = io.BytesIO()
         output_image.save(buffer, format="PNG", optimize=True)
         buffer.seek(0)
@@ -63,15 +55,11 @@ async def remove_background(file: UploadFile = File(...)):
         return StreamingResponse(
             buffer,
             media_type="image/png",
-            headers={
-                "Content-Disposition": "attachment; filename=removed.png"
-            }
+            headers={"Content-Disposition": "attachment; filename=removed.png"}
         )
 
     except Exception as e:
         return {"error": str(e)}
-
-
 
 # =========================================
 # 🔹 ROTA 2 — UPLOAD PARA IMGBB
@@ -84,10 +72,7 @@ async def upload_imgbb(file: UploadFile = File(...)):
 
         response = requests.post(
             "https://api.imgbb.com/1/upload",
-            data={
-                "key": IMGBB_API_KEY,
-                "image": img_base64
-            }
+            data={"key": IMGBB_API_KEY, "image": img_base64}
         )
 
         result = response.json()
