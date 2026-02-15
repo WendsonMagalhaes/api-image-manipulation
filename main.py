@@ -1,3 +1,4 @@
+# main.py
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -8,20 +9,22 @@ import io
 import base64
 import os
 from dotenv import load_dotenv
+import uvicorn
 
+# Carregar variáveis de ambiente
 load_dotenv()
 
 app = FastAPI()
 
 IMGBB_API_KEY = os.getenv("IMGBB_API_KEY")
 
-# 🔹 Use apenas a sessão compatível com rembg e ONNX
-session = new_session("u2netp")  # mais estável no Render/CPU
+# Use a sessão otimizada do rembg
+session = new_session("u2netp")
 
 if not IMGBB_API_KEY:
     raise ValueError("IMGBB_API_KEY não configurada")
 
-# 🔹 Permitir acesso do frontend
+# Permitir acesso do frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -29,13 +32,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# =========================================
-# 🔹 ROTA TESTE (opcional)
-# =========================================
-@app.get("/")
-def root():
-    return {"status": "API online 🚀"}
 
 # =========================================
 # 🔹 ROTA 1 — REMOVER FUNDO
@@ -56,9 +52,6 @@ async def remove_background(file: UploadFile = File(...)):
             alpha_matting_erode_size=10
         )
 
-        # Pós-processamento leve para suavizar bordas
-        output_image = output_image.convert("RGBA")
-
         buffer = io.BytesIO()
         output_image.save(buffer, format="PNG", optimize=True)
         buffer.seek(0)
@@ -66,9 +59,7 @@ async def remove_background(file: UploadFile = File(...)):
         return StreamingResponse(
             buffer,
             media_type="image/png",
-            headers={
-                "Content-Disposition": "attachment; filename=removed.png"
-            }
+            headers={"Content-Disposition": "attachment; filename=removed.png"}
         )
 
     except Exception as e:
@@ -81,14 +72,11 @@ async def remove_background(file: UploadFile = File(...)):
 async def upload_imgbb(file: UploadFile = File(...)):
     try:
         contents = await file.read()
-        img_base64 = base64.b64encode(contents).decode("utf-8")  # importante decodificar
+        img_base64 = base64.b64encode(contents)
 
         response = requests.post(
             "https://api.imgbb.com/1/upload",
-            data={
-                "key": IMGBB_API_KEY,
-                "image": img_base64
-            }
+            data={"key": IMGBB_API_KEY, "image": img_base64}
         )
 
         result = response.json()
@@ -103,3 +91,10 @@ async def upload_imgbb(file: UploadFile = File(...)):
 
     except Exception as e:
         return {"error": str(e)}
+
+# =========================================
+# 🔹 START DO APP (para Render)
+# =========================================
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))  # Porta do Render ou 8000 local
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
