@@ -6,3 +6,5 @@ requests
 python-multipart
 onnxruntime
 python-dotenv
+gunicorn
+
