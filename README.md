@@ -3,10 +3,8 @@ title: Remove Background API
 emoji: 🎨
 colorFrom: blue
 colorTo: indigo
-sdk: docker
-sdk_version: "0.0.1"
-app_file: app/main.py
+sdk: gradio
+sdk_version: "3.38"  # ou versão que você quer
+app_file: app.py
 pinned: false
 ---
-
-FastAPI backend para remover fundo de imagens usando rembg.
