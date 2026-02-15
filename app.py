@@ -1,11 +1,9 @@
 import gradio as gr
 from rembg import remove
 from PIL import Image
-import io
 
 def remove_bg(image: Image.Image) -> Image.Image:
-    output = remove(image)
-    return output
+    return remove(image)
 
 demo = gr.Interface(
     fn=remove_bg,

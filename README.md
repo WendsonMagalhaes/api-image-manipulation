@@ -4,10 +4,8 @@ emoji: 🎨
 colorFrom: blue
 colorTo: indigo
 sdk: gradio
-sdk_version: "3.63.2"
+sdk_version: "3.68.1"   # última versão existente suportada pelo HF
 python_version: "3.12"
 app_file: app.py
 pinned: false
 ---
-
-API simples para remover fundo de imagens usando o modelo isnet-general-use.
