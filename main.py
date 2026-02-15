@@ -18,8 +18,13 @@ app = FastAPI()
 
 IMGBB_API_KEY = os.getenv("IMGBB_API_KEY")
 
-# Pré-carrega o modelo U2NETP na inicialização (evita timeout na primeira requisição)
-session = new_session("u2netp")
+# Carrega na primeira requisição (lazy load)
+session = None
+
+@app.on_event("startup")
+async def startup_event():
+    global session
+    session = new_session("u2netp")
 
 if not IMGBB_API_KEY:
     raise ValueError("IMGBB_API_KEY não configurada")
