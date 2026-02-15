@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from rembg import remove, new_session
+from rembg import remove
 from PIL import Image
 import requests
 import io
