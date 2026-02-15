@@ -1,10 +1,9 @@
 fastapi
 uvicorn
+gunicorn
 rembg
 pillow
 requests
 python-multipart
 onnxruntime
 python-dotenv
-gunicorn
-
