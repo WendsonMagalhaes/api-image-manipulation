@@ -5,3 +5,4 @@ pillow
 requests
 python-multipart
 onnxruntime
+python-dotenv
