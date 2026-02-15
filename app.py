@@ -1,32 +1,18 @@
 import gradio as gr
-from isnet_general_use import new_session
+from rembg import remove
 from PIL import Image
 import io
-import base64
 
-# Cria a sessão do modelo
-session = new_session("isnet-general-use")
+def remove_bg(image: Image.Image) -> Image.Image:
+    output = remove(image)
+    return output
 
-def remove_background(image: Image.Image):
-    """
-    Recebe PIL.Image, retorna PIL.Image com fundo removido
-    """
-    if image.mode != "RGB":
-        image = image.convert("RGB")
-
-    # Aplica remoção de fundo
-    output_image = session.process(image)  # dependendo da versão do isnet-general-use
-
-    return output_image
-
-# Interface Gradio
 demo = gr.Interface(
-    fn=remove_background,
+    fn=remove_bg,
     inputs=gr.Image(type="pil"),
     outputs=gr.Image(type="pil"),
-    title="Remover Fundo AI",
-    description="Envie uma imagem e remova o fundo automaticamente.",
-    allow_flagging="never"
+    title="Remove Background API",
+    description="Remove o fundo das imagens usando isnet-general-use."
 )
 
-demo.launch()
+demo.launch(server_name="0.0.0.0", server_port=7860)
