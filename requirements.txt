@@ -1,9 +1,11 @@
 fastapi
-uvicorn
 gunicorn
-rembg
+
 pillow
 requests
 python-multipart
 onnxruntime
 python-dotenv
+uvicorn[standard]
+rembg[gpu]   # se quiser GPU, senão só "rembg"
+
