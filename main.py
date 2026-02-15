@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from rembg import remove
+from fastapi.responses import StreamingResponse
+from rembg import remove, new_session
 from PIL import Image
 import requests
 import io
@@ -17,8 +18,6 @@ IMGBB_API_KEY = os.getenv("IMGBB_API_KEY")
 if not IMGBB_API_KEY:
     raise ValueError("IMGBB_API_KEY não configurada")
 
-
-
 # Permitir acesso do frontend
 app.add_middleware(
     CORSMiddleware,
@@ -28,7 +27,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+# =========================================
+# 🔹 ROTA 1 — REMOVER FUNDO
+# =========================================
 @app.post("/remove-background")
 async def remove_background(file: UploadFile = File(...)):
     try:
@@ -36,18 +37,34 @@ async def remove_background(file: UploadFile = File(...)):
 
         input_image = Image.open(io.BytesIO(contents)).convert("RGBA")
 
-        # Remove fundo
         output_image = remove(input_image)
 
-        # Salvar em memória com alta qualidade
         buffer = io.BytesIO()
         output_image.save(buffer, format="PNG", optimize=True)
         buffer.seek(0)
 
-        # Converter para base64
-        img_base64 = base64.b64encode(buffer.read())
+        return StreamingResponse(
+            buffer,
+            media_type="image/png",
+            headers={
+                "Content-Disposition": "attachment; filename=removed.png"
+            }
+        )
 
-        # Enviar para ImgBB
+    except Exception as e:
+        return {"error": str(e)}
+
+
+# =========================================
+# 🔹 ROTA 2 — UPLOAD PARA IMGBB
+# =========================================
+@app.post("/upload-imgbb")
+async def upload_imgbb(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+
+        img_base64 = base64.b64encode(contents)
+
         response = requests.post(
             "https://api.imgbb.com/1/upload",
             data={
@@ -62,7 +79,7 @@ async def remove_background(file: UploadFile = File(...)):
             return {"error": result}
 
         return {
-            "message": "Fundo removido e enviado com sucesso",
+            "message": "Imagem enviada com sucesso",
             "imgbb_url": result["data"]["url"]
         }
 
