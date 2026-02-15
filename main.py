@@ -15,7 +15,9 @@ app = FastAPI()
 
 IMGBB_API_KEY = os.getenv("IMGBB_API_KEY")
 
-session = new_session("isnet-general-use")
+session = new_session("u2netp")
+#session = new_session("isnet-general-use")
+
 
 if not IMGBB_API_KEY:
     raise ValueError("IMGBB_API_KEY não configurada")
