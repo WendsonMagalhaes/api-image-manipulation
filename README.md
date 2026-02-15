@@ -4,7 +4,7 @@ emoji: 🎨
 colorFrom: blue
 colorTo: indigo
 sdk: gradio
-sdk_version: "3.53"  # versão do Gradio que você quer usar
+sdk_version: "3.59.0"
 python_version: "3.12"
 app_file: app.py
 pinned: false
