@@ -18,7 +18,7 @@ app = FastAPI()
 
 IMGBB_API_KEY = os.getenv("IMGBB_API_KEY")
 
-# Use a sessão otimizada do rembg
+# Pré-carrega o modelo U2NETP na inicialização (evita timeout na primeira requisição)
 session = new_session("u2netp")
 
 if not IMGBB_API_KEY:
@@ -97,4 +97,4 @@ async def upload_imgbb(file: UploadFile = File(...)):
 # =========================================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))  # Porta do Render ou 8000 local
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
+    uvicorn.run("main:app", host="0.0.0.0", port=port, log_level="info")
